@@ -1,6 +1,6 @@
 use crossterm::event::{self, Event, KeyEventKind};
 use ratatui::Frame;
-use ratatui::layout::Constraint;
+use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::style::{Color, Style};
 use ratatui::widgets::{Block, Cell, Row, Table};
 use serde::Deserialize;
@@ -124,7 +124,16 @@ fn linux_package_list(frame: &mut Frame, linux_packages: &[LinuxPackage]) {
     });
 
     let table = Table::new(rows, widths).block(Block::bordered().title("Linux Packages"));
-    frame.render_widget(table, frame.area())
+
+    let vertical_section = Layout::new(
+        Direction::Vertical,
+        [Constraint::Percentage(80), Constraint::Percentage(20)],
+    )
+    .split(frame.area());
+
+    Layout::new(Direction::Horizontal, [Constraint::Percentage(50)]).split(vertical_section[0]);
+
+    frame.render_widget(table, vertical_section[0])
 }
 
 fn render(frame: &mut Frame, linux_packages: &[LinuxPackage]) {
