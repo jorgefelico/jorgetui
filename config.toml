@@ -21,4 +21,6 @@ system_packages = [
   { name = "playerctl", package_manager = "yay" },
   { name = "python-setuptools", package_manager = "yay" },
   { name = "zscroll", package_manager = "yay" },
+  { name = "fd", package_manager = "pacman" },
+  { name = "github-cli", package_manager = "pacman" }
 ]

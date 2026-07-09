@@ -131,7 +131,7 @@ fn linux_package_list(frame: &mut Frame, linux_packages: &[LinuxPackage]) {
     )
     .split(frame.area());
 
-    Layout::new(Direction::Horizontal, [Constraint::Percentage(50)]).split(vertical_section[0]);
+    Layout::new(Direction::Horizontal, [Constraint::Percentage(100)]).split(vertical_section[0]);
 
     frame.render_widget(table, vertical_section[0])
 }
