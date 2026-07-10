@@ -6,6 +6,7 @@ use ratatui::widgets::{Block, Cell, Paragraph, Row, Table};
 use serde::Deserialize;
 use std::fs;
 use std::process::Command;
+use std::sync::Mutex;
 
 #[derive(Deserialize)]
 struct Config {
@@ -36,6 +37,8 @@ enum Status {
     NotInstalled,
     FailedInstall,
 }
+
+static CONSOLE_LOG: Mutex<Vec<String>> = Mutex::new(vec![]);
 
 fn main() -> color_eyre::Result<()> {
     let mut linux_packages: Vec<LinuxPackage> = get_packages_from_config();
@@ -77,8 +80,14 @@ fn main() -> color_eyre::Result<()> {
 }
 
 fn get_packages_from_config() -> Vec<LinuxPackage> {
+    let mut console_log = CONSOLE_LOG.lock().unwrap();
+    console_log.push(String::from("Getting packages from config..."));
     let toml_raw = fs::read_to_string("config.toml").unwrap();
     let data: Config = toml::from_str(&toml_raw).unwrap();
+    console_log.push(String::from(format!(
+        "Found {} packages in config...",
+        data.system_packages.len()
+    )));
     Vec::from_iter(data.system_packages.iter().map(|f| LinuxPackage {
         name: f.name.clone(),
         package_manager: match f.package_manager.as_str() {
@@ -101,6 +110,8 @@ fn exec_command(command: String, args: Vec<&str>) -> bool {
 }
 
 fn check_if_linux_packages_are_installed(linux_packages: &mut Vec<LinuxPackage>) {
+    let mut console_log = CONSOLE_LOG.lock().unwrap();
+    console_log.push(String::from("Checking what packages are installed..."));
     for package in linux_packages {
         match exec_command(
             String::from(match package.package_manager {
@@ -187,8 +198,10 @@ fn linux_package_list(frame: &mut Frame, linux_packages: &[LinuxPackage], packag
         .split(vertical_section[0]);
     frame.render_widget(table, table_section[0]);
 
-    let buttons =
-        Paragraph::new("Hello").block(Block::bordered().border_style(Color::Rgb(25, 25, 25)));
+    let console_log = CONSOLE_LOG.lock().unwrap();
+    let buttons = Paragraph::new(console_log.join("\n"))
+        .block(Block::bordered().border_style(Color::Rgb(25, 25, 25)));
+
     frame.render_widget(buttons, vertical_section[1]);
 }
 
