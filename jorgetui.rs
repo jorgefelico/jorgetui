@@ -102,7 +102,10 @@ fn get_packages_from_config() -> Vec<LinuxPackage> {
 fn exec_command(command: String, args: Vec<&str>) -> bool {
     match Command::new(command).args(args).output() {
         Ok(output) => {
-            let _stdout = String::from_utf8_lossy(&output.stdout);
+            let _stdout = {
+                String::from_utf8_lossy(&output.stdout).to_string();
+                println!("{}", String::from_utf8_lossy(&output.stdout).to_string())
+            };
             output.status.success()
         }
         Err(_) => false,
@@ -206,11 +209,20 @@ fn linux_package_list(frame: &mut Frame, linux_packages: &[LinuxPackage], packag
 }
 
 fn install_package(package: &LinuxPackage) {
+    let mut console_log = CONSOLE_LOG.lock().unwrap();
+    console_log.push(String::from(format!(
+        "Installing {} from {}...",
+        package.name,
+        match package.package_manager {
+            PackageManager::Yay => "Yay",
+            PackageManager::Pacman => "Pacman",
+        }
+    )));
     let command = match package.package_manager {
         PackageManager::Pacman => "pacman".to_string(),
         PackageManager::Yay => "yay".to_string(),
     };
-    exec_command(command, vec!["-S", &package.name]);
+    let output = exec_command(command, vec!["-S", &package.name]);
 }
 
 fn render(frame: &mut Frame, linux_packages: &[LinuxPackage], package_row: &mut usize) {
